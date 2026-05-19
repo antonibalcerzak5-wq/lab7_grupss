@@ -1,5 +1,5 @@
 from src.models import Apartment, Bill, Parameters, Tenant, TenantSettlement, Transfer, ApartmentSettlement
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 class Manager:
     def __init__(self, parameters: Parameters):
@@ -24,13 +24,10 @@ class Manager:
                 return False
         return True
     
-    def get_apartment(self, apartment_key: str) -> Apartment | None:
-        for apartment in self.apartments.values():
-            if apartment.key == apartment_key:
-                return apartment
-        return None
+    def get_apartment(self, apartment_key: str) -> Optional[Apartment]:
+        return self.apartments.get(apartment_key)
 
-    def get_apartment_costs(self, apartment_key: str, year: int = None, month: int = None) -> float | None:
+    def get_apartment_costs(self, apartment_key: str, year: int = None, month: int = None) -> Optional[float]:
         if month is not None and (month < 1 or month > 12):
             raise ValueError("Month must be between 1 and 12")
         if apartment_key not in self.apartments:
@@ -41,7 +38,7 @@ class Manager:
                 total_cost += bill.amount_pln
         return total_cost
 
-    def get_settlement(self, apartment_key: str, year: int, month: int) -> ApartmentSettlement | None:
+    def get_settlement(self, apartment_key: str, year: int, month: int) -> Optional[ApartmentSettlement]:
         if month < 1 or month > 12:
             raise ValueError("Month must be between 1 and 12")
         if apartment_key not in self.apartments:
@@ -58,7 +55,7 @@ class Manager:
             total_due_pln=total_cost
         )
     
-    def create_tenants_settlements(self, apartment_settlement: ApartmentSettlement) -> List[TenantSettlement] | None:
+    def create_tenants_settlements(self, apartment_settlement: ApartmentSettlement) -> Optional[List[TenantSettlement]]:
         if apartment_settlement.month < 1 or apartment_settlement.month > 12:
             raise ValueError("Month must be between 1 and 12")
         if apartment_settlement.apartment not in self.apartments:
