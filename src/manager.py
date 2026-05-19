@@ -21,7 +21,7 @@ class Manager:
         self.tenants = Tenant.from_json_file(self.parameters.tenants_json_path)
         self.transfers = Transfer.from_json_file(self.parameters.transfers_json_path)
         self.bills = Bill.from_json_file(self.parameters.bills_json_path)
-        self.blacklist = BlacklistedTenant.from_json_file(self.parameters.blacklist_json_path)
+        self.blacklisted_tenants = BlacklistedTenant.from_json_file(self.parameters.blacklist_json_path)
 
     def check_tenants_apartment_keys(self) -> bool:
         for tenant in self.tenants.values():
@@ -30,7 +30,7 @@ class Manager:
         return True
 
     def is_tenant_blacklisted(self, tenant_name: str) -> bool:
-        return any(tenant.name == tenant_name for tenant in self.blacklist)
+        return any(tenant.name == tenant_name for tenant in self.blacklisted_tenants)
     
     def get_apartment(self, apartment_key: str) -> Optional[Apartment]:
         return self.apartments.get(apartment_key)
