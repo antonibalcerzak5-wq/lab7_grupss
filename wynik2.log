@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Users/izak/lab7_grupss/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/izak/lab7_grupss
+collecting ... collected 27 items
+
+tests/test_blacklist.py::test_blacklisted_tenant_model_has_required_fields PASSED [  3%]
+tests/test_blacklist.py::test_blacklisted_tenant_model_requires_reason PASSED [  7%]
+tests/test_blacklist.py::test_blacklisted_tenants_can_be_loaded_from_json_file PASSED [ 11%]
+tests/test_blacklist.py::test_parameters_contains_blacklist_json_path PASSED [ 14%]
+tests/test_blacklist.py::test_manager_loads_blacklisted_tenants_from_file PASSED [ 18%]
+tests/test_blacklist.py::test_manager_checks_if_tenant_is_blacklisted PASSED [ 22%]
+tests/test_complex_integration.py::test_apartment_costs PASSED           [ 25%]
+tests/test_complex_integration.py::test_apartment_costs_with_optional_parameters PASSED [ 29%]
+tests/test_complex_integration.py::test_settlement_creation PASSED       [ 33%]
+tests/test_complex_integration.py::test_tenants_settlements_creation PASSED [ 37%]
+tests/test_functional.py::test_settlement_due_between_tanants_and_apartment PASSED [ 40%]
+tests/test_functional.py::test_debtors_calculation PASSED                [ 44%]
+tests/test_functional.py::test_tax_calculation PASSED                    [ 48%]
+tests/test_functional.py::test_deposits_calculation PASSED               [ 51%]
+tests/test_functional.py::test_annual_balance_calculation PASSED         [ 55%]
+tests/test_functional.py::test_apartment_has_any_bills PASSED            [ 59%]
+tests/test_integration.py::test_load_data PASSED                         [ 62%]
+tests/test_integration.py::test_tenants_in_manager PASSED                [ 66%]
+tests/test_integration.py::test_if_tenants_have_valid_apartment_keys PASSED [ 70%]
+tests/test_performance.py::test_search_for_apartment_large_dataset PASSED [ 74%]
+tests/test_transfer_checks.py::test_detect_unassigned_transfer PASSED    [ 77%]
+tests/test_transfer_checks.py::test_detect_transfer_outside_agreement PASSED [ 81%]
+tests/test_unit.py::test_apartment_fields PASSED                         [ 85%]
+tests/test_unit.py::test_apartment_from_dict PASSED                      [ 88%]
+tests/test_unit.py::test_tenant_fields PASSED                            [ 92%]
+tests/test_unit.py::test_tenant_from_dict PASSED                         [ 96%]
+tests/test_validation.py::test_transfer_validation_out_of_bounds PASSED  [100%]
+
+============================== 27 passed in 0.33s ==============================
