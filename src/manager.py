@@ -11,6 +11,9 @@ class Manager:
         self.tenants = {}
         self.transfers = []
         self.bills = []
+        self.blacklist = []
+        self.min_transfer_amount = None
+        self.max_transfer_amount = None
        
         self.load_data()
 
@@ -19,12 +22,16 @@ class Manager:
         self.tenants = Tenant.from_json_file(self.parameters.tenants_json_path)
         self.transfers = Transfer.from_json_file(self.parameters.transfers_json_path)
         self.bills = Bill.from_json_file(self.parameters.bills_json_path)
+        self.blacklisted_tenants = BlacklistedTenant.from_json_file(self.parameters.blacklist_json_path)
 
     def check_tenants_apartment_keys(self) -> bool:
         for tenant in self.tenants.values():
             if tenant.apartment not in self.apartments:
                 return False
         return True
+
+    def is_tenant_blacklisted(self, tenant_name: str) -> bool:
+        return any(tenant.name == tenant_name for tenant in self.blacklisted_tenants)
     
     def get_apartment(self, apartment_key: str) -> Apartment | None:
         return self.apartments.get(apartment_key)
@@ -144,35 +151,12 @@ class Manager:
             and bill.settlement_month == month
         ])
 
-    def find_transfer_errors(self) -> list[dict]:
-        errors = []
-
+    def get_invalid_transfers(self) -> list[Transfer]:
+        invalid_transfers = []
         for transfer in self.transfers:
-            if transfer.tenant not in self.tenants:
-                errors.append({
-                    "type": "unassigned_tenant",
-                    "transfer": transfer
-                })
+            if self.min_transfer_amount is not None and transfer.amount_pln < self.min_transfer_amount:
+                invalid_transfers.append(transfer)
                 continue
-
-            tenant = self.tenants[transfer.tenant]
-
-            if transfer.settlement_year is None or transfer.settlement_month is None:
-                continue
-
-            transfer_date = date(
-                transfer.settlement_year,
-                transfer.settlement_month,
-                1
-            )
-
-            agreement_from = date.fromisoformat(tenant.date_agreement_from)
-            agreement_to = date.fromisoformat(tenant.date_agreement_to)
-
-            if transfer_date < agreement_from or transfer_date > agreement_to:
-                errors.append({
-                    "type": "transfer_outside_agreement",
-                    "transfer": transfer
-                })
-
-        return errors
+            if self.max_transfer_amount is not None and transfer.amount_pln > self.max_transfer_amount:
+                invalid_transfers.append(transfer)
+        return invalid_transfers
