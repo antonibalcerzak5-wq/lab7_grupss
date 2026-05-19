@@ -1,6 +1,7 @@
 from src.models import Apartment, Bill, Parameters, Tenant, TenantSettlement, Transfer, ApartmentSettlement
 from typing import List, Tuple
 
+
 class Manager:
     def __init__(self, parameters: Parameters):
         self.parameters = parameters 
@@ -25,10 +26,7 @@ class Manager:
         return True
     
     def get_apartment(self, apartment_key: str) -> Apartment | None:
-        for apartment in self.apartments.values():
-            if apartment.key == apartment_key:
-                return apartment
-        return None
+        return self.apartments.get(apartment_key)
 
     def get_apartment_costs(self, apartment_key: str, year: int = None, month: int = None) -> float | None:
         if month is not None and (month < 1 or month > 12):
@@ -75,7 +73,8 @@ class Manager:
                 year=apartment_settlement.year,
                 total_due_pln=apartment_settlement.total_due_pln / len(tenants_in_apartment)
             )
-        for tenant in tenants_in_apartment ] 
+            for tenant in tenants_in_apartment
+        ] 
     
     def get_debtors(self, apartment_key: str, year: int, month: int) -> List[str]:
         if month < 1 or month > 12:
@@ -85,28 +84,51 @@ class Manager:
         tenant_settlements = self.create_tenants_settlements(settlement)
 
         for tenant_settlement in tenant_settlements:
-            tenant_transfers = [transfer for transfer in self.transfers if self.tenants[transfer.tenant].name == tenant_settlement.tenant and transfer.settlement_year == year and transfer.settlement_month == month]
-            total_paid = sum([transfer.amount_pln for transfer in tenant_transfers if transfer.settlement_year == year and transfer.settlement_month == month])
+            tenant_transfers = [
+                transfer for transfer in self.transfers
+                if self.tenants[transfer.tenant].name == tenant_settlement.tenant
+                and transfer.settlement_year == year
+                and transfer.settlement_month == month
+            ]
+            total_paid = sum([
+                transfer.amount_pln for transfer in tenant_transfers
+                if transfer.settlement_year == year
+                and transfer.settlement_month == month
+            ])
             if total_paid < tenant_settlement.total_due_pln:
                 output.append(tenant_settlement.tenant)
         return output
     
     def calculate_tax(self, year: int, month: int, tax_rate: float) -> float:
-        total_income = sum([transfer.amount_pln for transfer in self.transfers if transfer.settlement_year == year and transfer.settlement_month == month])
+        total_income = sum([
+            transfer.amount_pln for transfer in self.transfers
+            if transfer.settlement_year == year
+            and transfer.settlement_month == month
+        ])
         return round(total_income * tax_rate, 0)
     
     def check_deposits(self) -> float:
         total_deposits = 0.0
         total_due = 0.0
         for tenant_key, tenant in self.tenants.items():
-            total_deposits += sum([transfer.amount_pln for transfer in self.transfers if self.tenants[transfer.tenant].name == tenant.name and transfer.type == 'deposit'])
+            total_deposits += sum([
+                transfer.amount_pln for transfer in self.transfers
+                if self.tenants[transfer.tenant].name == tenant.name
+                and transfer.type == 'deposit'
+            ])
             total_due += tenant.deposit_pln
         
         return total_deposits - total_due
     
     def get_annual_balance(self, year: int) -> float:
-        total_income = sum([transfer.amount_pln for transfer in self.transfers if transfer.settlement_year == year])
-        total_due = sum([bill.amount_pln for bill in self.bills if bill.settlement_year == year])
+        total_income = sum([
+            transfer.amount_pln for transfer in self.transfers
+            if transfer.settlement_year == year
+        ])
+        total_due = sum([
+            bill.amount_pln for bill in self.bills
+            if bill.settlement_year == year
+        ])
         return total_income - total_due
     
     def has_any_bills(self, apartment_key: str, year: int, month: int) -> bool:
@@ -114,4 +136,9 @@ class Manager:
             raise ValueError("Month must be between 1 and 12")
         if apartment_key not in self.apartments:
             raise ValueError("Apartment key does not exist")
-        return any([bill for bill in self.bills if bill.apartment == apartment_key and bill.settlement_year == year and bill.settlement_month == month])
+        return any([
+            bill for bill in self.bills
+            if bill.apartment == apartment_key
+            and bill.settlement_year == year
+            and bill.settlement_month == month
+        ])
