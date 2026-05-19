@@ -1,5 +1,5 @@
-from src.models import Apartment, Bill, Parameters, Tenant, TenantSettlement, Transfer, ApartmentSettlement
-from typing import List, Tuple
+from src.models import Apartment, Bill, Parameters, Tenant, TenantSettlement, Transfer, ApartmentSettlement, BlacklistedTenant
+from typing import List, Tuple, Optional
 from datetime import date
 
 
@@ -33,10 +33,10 @@ class Manager:
     def is_tenant_blacklisted(self, tenant_name: str) -> bool:
         return any(tenant.name == tenant_name for tenant in self.blacklisted_tenants)
     
-    def get_apartment(self, apartment_key: str) -> Apartment | None:
+    def get_apartment(self, apartment_key: str) -> Optional[Apartment]:
         return self.apartments.get(apartment_key)
 
-    def get_apartment_costs(self, apartment_key: str, year: int = None, month: int = None) -> float | None:
+    def get_apartment_costs(self, apartment_key: str, year: int = None, month: int = None) -> Optional[float]:
         if month is not None and (month < 1 or month > 12):
             raise ValueError("Month must be between 1 and 12")
         if apartment_key not in self.apartments:
@@ -47,7 +47,7 @@ class Manager:
                 total_cost += bill.amount_pln
         return total_cost
 
-    def get_settlement(self, apartment_key: str, year: int, month: int) -> ApartmentSettlement | None:
+    def get_settlement(self, apartment_key: str, year: int, month: int) -> Optional[ApartmentSettlement]:
         if month < 1 or month > 12:
             raise ValueError("Month must be between 1 and 12")
         if apartment_key not in self.apartments:
@@ -64,7 +64,7 @@ class Manager:
             total_due_pln=total_cost
         )
     
-    def create_tenants_settlements(self, apartment_settlement: ApartmentSettlement) -> List[TenantSettlement] | None:
+    def create_tenants_settlements(self, apartment_settlement: ApartmentSettlement) -> Optional[List[TenantSettlement]]:
         if apartment_settlement.month < 1 or apartment_settlement.month > 12:
             raise ValueError("Month must be between 1 and 12")
         if apartment_settlement.apartment not in self.apartments:
@@ -160,3 +160,17 @@ class Manager:
             if self.max_transfer_amount is not None and transfer.amount_pln > self.max_transfer_amount:
                 invalid_transfers.append(transfer)
         return invalid_transfers
+
+    def find_transfer_errors(self) -> List[dict]:
+        errors = []
+        for transfer in self.transfers:
+            tenant = self.tenants.get(transfer.tenant)
+            if not tenant:
+                errors.append({'type': 'unassigned_tenant', 'transfer': transfer})
+                continue
+            
+            if tenant.date_agreement_from and transfer.date < tenant.date_agreement_from:
+                errors.append({'type': 'transfer_outside_agreement', 'transfer': transfer})
+            elif tenant.date_agreement_to and transfer.date > tenant.date_agreement_to:
+                errors.append({'type': 'transfer_outside_agreement', 'transfer': transfer})
+        return errors
