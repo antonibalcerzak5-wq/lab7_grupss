@@ -1,5 +1,6 @@
-from src.models import Apartment, Bill, Parameters, Tenant, TenantSettlement, Transfer, ApartmentSettlement, BlacklistedTenant
-from typing import List, Tuple, Optional
+from src.models import Apartment, Bill, Parameters, Tenant, TenantSettlement, Transfer, ApartmentSettlement
+from typing import List, Tuple
+from datetime import date
 
 
 class Manager:
@@ -10,7 +11,6 @@ class Manager:
         self.tenants = {}
         self.transfers = []
         self.bills = []
-        self.blacklist = []
        
         self.load_data()
 
@@ -19,21 +19,17 @@ class Manager:
         self.tenants = Tenant.from_json_file(self.parameters.tenants_json_path)
         self.transfers = Transfer.from_json_file(self.parameters.transfers_json_path)
         self.bills = Bill.from_json_file(self.parameters.bills_json_path)
-        self.blacklist = BlacklistedTenant.from_json_file(self.parameters.blacklist_json_path)
 
     def check_tenants_apartment_keys(self) -> bool:
         for tenant in self.tenants.values():
             if tenant.apartment not in self.apartments:
                 return False
         return True
-
-    def is_tenant_blacklisted(self, tenant_name: str) -> bool:
-        return any(tenant.name == tenant_name for tenant in self.blacklist)
     
-    def get_apartment(self, apartment_key: str) -> Optional[Apartment]:
+    def get_apartment(self, apartment_key: str) -> Apartment | None:
         return self.apartments.get(apartment_key)
 
-    def get_apartment_costs(self, apartment_key: str, year: int = None, month: int = None) -> Optional[float]:
+    def get_apartment_costs(self, apartment_key: str, year: int = None, month: int = None) -> float | None:
         if month is not None and (month < 1 or month > 12):
             raise ValueError("Month must be between 1 and 12")
         if apartment_key not in self.apartments:
@@ -44,7 +40,7 @@ class Manager:
                 total_cost += bill.amount_pln
         return total_cost
 
-    def get_settlement(self, apartment_key: str, year: int, month: int) -> Optional[ApartmentSettlement]:
+    def get_settlement(self, apartment_key: str, year: int, month: int) -> ApartmentSettlement | None:
         if month < 1 or month > 12:
             raise ValueError("Month must be between 1 and 12")
         if apartment_key not in self.apartments:
@@ -61,7 +57,7 @@ class Manager:
             total_due_pln=total_cost
         )
     
-    def create_tenants_settlements(self, apartment_settlement: ApartmentSettlement) -> Optional[List[TenantSettlement]]:
+    def create_tenants_settlements(self, apartment_settlement: ApartmentSettlement) -> List[TenantSettlement] | None:
         if apartment_settlement.month < 1 or apartment_settlement.month > 12:
             raise ValueError("Month must be between 1 and 12")
         if apartment_settlement.apartment not in self.apartments:
@@ -147,3 +143,36 @@ class Manager:
             and bill.settlement_year == year
             and bill.settlement_month == month
         ])
+
+    def find_transfer_errors(self) -> list[dict]:
+        errors = []
+
+        for transfer in self.transfers:
+            if transfer.tenant not in self.tenants:
+                errors.append({
+                    "type": "unassigned_tenant",
+                    "transfer": transfer
+                })
+                continue
+
+            tenant = self.tenants[transfer.tenant]
+
+            if transfer.settlement_year is None or transfer.settlement_month is None:
+                continue
+
+            transfer_date = date(
+                transfer.settlement_year,
+                transfer.settlement_month,
+                1
+            )
+
+            agreement_from = date.fromisoformat(tenant.date_agreement_from)
+            agreement_to = date.fromisoformat(tenant.date_agreement_to)
+
+            if transfer_date < agreement_from or transfer_date > agreement_to:
+                errors.append({
+                    "type": "transfer_outside_agreement",
+                    "transfer": transfer
+                })
+
+        return errors
