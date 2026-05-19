@@ -10,7 +10,9 @@ class Manager:
         self.tenants = {}
         self.transfers = []
         self.bills = []
-        self.blacklisted_tenants = []
+        self.blacklist = []
+        self.min_transfer_amount = None
+        self.max_transfer_amount = None
        
         self.load_data()
 
@@ -147,3 +149,13 @@ class Manager:
             and bill.settlement_year == year
             and bill.settlement_month == month
         ])
+
+    def get_invalid_transfers(self) -> list[Transfer]:
+        invalid_transfers = []
+        for transfer in self.transfers:
+            if self.min_transfer_amount is not None and transfer.amount_pln < self.min_transfer_amount:
+                invalid_transfers.append(transfer)
+                continue
+            if self.max_transfer_amount is not None and transfer.amount_pln > self.max_transfer_amount:
+                invalid_transfers.append(transfer)
+        return invalid_transfers
