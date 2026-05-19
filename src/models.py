@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import json
 
@@ -53,10 +53,10 @@ class Tenant(BaseModel):
 class Transfer(BaseModel):
     amount_pln: float
     date: str
-    settlement_year: int | None
-    settlement_month: int | None
+    settlement_year: Optional[int]
+    settlement_month: Optional[int]
     tenant: str
-    type: str | None = None
+    type: Optional[str] = None
 
     @staticmethod
     def from_json_file(file_path: str) -> List['Transfer']:
