@@ -1,5 +1,6 @@
-from src.models import Apartment, Bill, Parameters, Tenant, TenantSettlement, Transfer, ApartmentSettlement, BlacklistedTenant
-from typing import List, Tuple, Optional
+from src.models import Apartment, Bill, Parameters, Tenant, TenantSettlement, Transfer, ApartmentSettlement
+from typing import List, Tuple
+from datetime import date
 
 
 class Manager:
@@ -32,10 +33,10 @@ class Manager:
     def is_tenant_blacklisted(self, tenant_name: str) -> bool:
         return any(tenant.name == tenant_name for tenant in self.blacklisted_tenants)
     
-    def get_apartment(self, apartment_key: str) -> Optional[Apartment]:
+    def get_apartment(self, apartment_key: str) -> Apartment | None:
         return self.apartments.get(apartment_key)
 
-    def get_apartment_costs(self, apartment_key: str, year: int = None, month: int = None) -> Optional[float]:
+    def get_apartment_costs(self, apartment_key: str, year: int = None, month: int = None) -> float | None:
         if month is not None and (month < 1 or month > 12):
             raise ValueError("Month must be between 1 and 12")
         if apartment_key not in self.apartments:
@@ -46,7 +47,7 @@ class Manager:
                 total_cost += bill.amount_pln
         return total_cost
 
-    def get_settlement(self, apartment_key: str, year: int, month: int) -> Optional[ApartmentSettlement]:
+    def get_settlement(self, apartment_key: str, year: int, month: int) -> ApartmentSettlement | None:
         if month < 1 or month > 12:
             raise ValueError("Month must be between 1 and 12")
         if apartment_key not in self.apartments:
@@ -63,7 +64,7 @@ class Manager:
             total_due_pln=total_cost
         )
     
-    def create_tenants_settlements(self, apartment_settlement: ApartmentSettlement) -> Optional[List[TenantSettlement]]:
+    def create_tenants_settlements(self, apartment_settlement: ApartmentSettlement) -> List[TenantSettlement] | None:
         if apartment_settlement.month < 1 or apartment_settlement.month > 12:
             raise ValueError("Month must be between 1 and 12")
         if apartment_settlement.apartment not in self.apartments:
