@@ -7,7 +7,6 @@ from src.manager import Manager
 def test_detect_unassigned_transfer():
     
     manager = Manager(Parameters())
-    # No tenants defined
     manager.tenants = {}
     manager.transfers = [
         Transfer(amount_pln=100.0, date="2024-01-01", settlement_year=2024, settlement_month=1, tenant="missing-tenant", type=None)
