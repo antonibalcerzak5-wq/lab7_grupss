@@ -9,6 +9,7 @@ class Parameters(BaseModel):
     tenants_json_path: str = 'data/tenants.json'
     transfers_json_path: str = 'data/transfers.json'
     bills_json_path: str = 'data/bills.json'
+    blacklist_json_path: str = 'data/blacklist.json'
 
 
 class Room(BaseModel):
@@ -102,3 +103,18 @@ class TenantSettlement(BaseModel):
     total_due_pln: float
     total_transfers_pln: float = 0.0
     balance_pln: float = 0.0
+
+
+class BlacklistedTenant(BaseModel):
+    name: str
+    reason: str
+
+    @staticmethod
+    def from_json_file(file_path: str) -> List['BlacklistedTenant']:
+        try:
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+            assert isinstance(data, list), "Expected a list of blacklisted tenants"
+            return [BlacklistedTenant(**tenant) for tenant in data]
+        except FileNotFoundError:
+            return []
